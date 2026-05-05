@@ -1,5 +1,9 @@
+import os
 import sys
 
+def clear_terminal():
+    # 'nt' is for Windows, 'posix' is for macOS and Linux
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def show_intro():
     print("Welcome to the Forest of Choices!")
@@ -22,5 +26,6 @@ def play_game():
         play_game()
 
 if __name__ == "__main__":
+    clear_terminal()
     show_intro()
     play_game()
