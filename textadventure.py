@@ -1,22 +1,39 @@
 import os
 import sys
 
+# messages to be used in the game, stored in a list for better organisation and easier maintenance
+messages = [
+# intro
+"Welcome to the Forest of Choices!",
+"You are a traveler searching for a lost treasure.",
+"Choose carefully, because every decision matters.",
+"(Or don't. We'll see how that works out for you.)",
+# play game
+"\nYou find yourself at a crossroads deep in the forest.",
+"To the left: a dark cave, barely lit, smelling of mystery and mild danger.",
+"To the right: a sunny meadow, suspiciously peaceful.",
+"Straight ahead: an overgrown path leading somewhere unknown.",
+# cave path
+"\nYou creep into the dark cave. It smells like regret and wet stone.",
+"By the faint glow ahead, you spot a glimmering treasure chest.",
+"There's a locked chest right in front of you, and a narrow tunnel going deeper."
+]
+
+
+
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def show_intro():
-    print("Welcome to the Forest of Choices!")
-    print("You are a traveler searching for a lost treasure.")
-    print("Choose carefully, because every decision matters.")
-    print("(Or don't. We'll see how that works out for you.)")
-    print()
+# function to print a range of messages from the list, for better organisation
+def pmessages(start, end):
+    for message in messages[start:end]:
+        print(message)
 
+def show_intro():
+    pmessages(0, 4)
+        
 def cave_path():
-    print()
-    print("You creep into the dark cave. It smells like regret and wet stone.")
-    print("By the faint glow ahead, you spot a glimmering treasure chest.")
-    print("There's a locked chest right in front of you, and a narrow tunnel going deeper.")
-    print()
+    pmessages(8, 11)
     choice = input("Do you 'grab' what you can reach, or 'go deeper'? ").strip().lower()
 
     if 'deeper' in choice or 'go' in choice:
@@ -55,6 +72,10 @@ def meadow_path():
         print("The bear is waiting. Try 'run' or 'approach'.")
         meadow_path()
 
+def castle_path():
+    print()
+    
+
 def river_path():
     print()
     print("The overgrown path opens onto a wide river. Cool, refreshing, and fast-moving.")
@@ -78,11 +99,7 @@ def river_path():
         river_path()
 
 def play_game():
-    print("You find yourself at a crossroads deep in the forest.")
-    print("To the left: a dark cave, barely lit, smelling of mystery and mild danger.")
-    print("To the right: a sunny meadow, suspiciously peaceful.")
-    print("Straight ahead: an overgrown path leading somewhere unknown.")
-    print()
+    pmessages(4, 8)
     choice = input("Which way do you go? (left / right / straight) ").strip().lower()
 
     if 'left' in choice:
