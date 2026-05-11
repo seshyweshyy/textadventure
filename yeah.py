@@ -3,8 +3,6 @@ from random import randint
 import sys
 from typing import List, Dict, Optional
 
-#classes
-
 class Item:
     """Represents an item the player can carry or find."""
     def __init__(self, name: str, description: str, usable: bool = False):
@@ -200,9 +198,6 @@ def build_world(player: Player) -> Dict[str, Location]:
     return world
 
 
-# -------------------------
-# Game flow and helpers
-# -------------------------
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -374,9 +369,6 @@ def castle_sequence(player: Player, location: Location, world: Dict[str, Locatio
         sys.exit(0)
 
 
-# -------------------------
-# Main game loop
-# -------------------------
 
 def play_game():
     clear_terminal()
