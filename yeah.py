@@ -132,12 +132,14 @@ def build_world(player: Player) -> Dict[str, Location]:
     prank_rocks = Item("Bag of Rocks", "A heavy bag full of ordinary rocks. Not treasure.", usable=False)
     map_item = Item("Map", "A crumpled map showing a route to treasure.", usable=True)
     hat = Item("Nice Hat", "A very nice hat. Stylish and useful for shade.", usable=False)
+    rusty_key = Item("Rusty Key", "An old key with a worn handle. It looks like it belongs to something locked.", usable=True)
 
     #place items
     cave.add_item(prank_rocks)
     cave.add_item(map_item)
     castle.add_item(treasure)
     castle.add_item(hat)
+    castle.add_item(rusty_key)
     cabin.add_item(treasure)  #alternate treasure location if player follows river
 
     #entities
@@ -163,7 +165,7 @@ def build_world(player: Player) -> Dict[str, Location]:
         elif "fight" in action or "battle" in action or "attack" in action:
             number = randint(1, 10)
             print("\nYou fight the bear. Daring.")
-            if number <= 7:
+            if number <= 5:
                 print("Perhaps not the greatest idea, however.")
                 print("The bear mauls you. What did you really expect?")
                 print("Game over. You lose.")
@@ -232,16 +234,20 @@ def cave_sequence(player: Player, location: Location, world: Dict[str, Location]
         # Move to castle (deeper)
         deeper = location.exits.get("deeper")
         if deeper:
-            print("\nBold. You crawl deeper and find the mother lode — gold, jewels, a very nice hat.")
-            # Transfer items from deeper location to player (simulate hauling out)
-            if deeper.items:
-                for item_name in list(deeper.items.keys()):
-                    item = deeper.remove_item(item_name)
-                    if item:
-                        player.add_item(item)
-            print("You haul it all out and live comfortably ever after. Nice work.")
-            print("You win!")
-            sys.exit(0)
+            num = randint(1, 10)
+            if num <= 3:
+                castle_sequence(player, deeper, world)
+            else:
+                print("\nBold. You crawl deeper and find the mother lode — gold, jewels, a very nice hat.")
+                # Transfer items from deeper location to player (simulate hauling out)
+                if deeper.items:
+                    for item_name in list(deeper.items.keys()):
+                        item = deeper.remove_item(item_name)
+                        if item:
+                            player.add_item(item)
+                print("You haul it all out and live comfortably ever after. Nice work.")
+                print("You win!")
+                sys.exit(0)
         else:
             print("The tunnel collapses. You're stuck. You lose.")
             sys.exit(0)
@@ -358,23 +364,56 @@ def river_sequence(player: Player, location: Location, world: Dict[str, Location
 
 def castle_sequence(player: Player, location: Location, world: Dict[str, Location]) -> None:
     location.describe()
-    print("The ruins are quiet. A locked chest sits beneath a collapsed arch.")
-    if location.items:
-        for item_name in list(location.items.keys()):
-            item = location.remove_item(item_name)
-            if item:
-                player.add_item(item)
-        print("You gather the spoils from the ruins and find a very nice hat among the loot.")
-        print("You win!")
-        sys.exit(0)
+    print("The castle ruins are quiet. A locked chest sits beneath a collapsed arch.")
+    print("You can try to open the chest, but it looks like it might be trapped.")
+    choice = prompt_choice("Do you want to try to open the chest or explore deeper into the ruins? ")
+    if 'open' in choice or 'chest' in choice:
+        if player.has_item("rusty key"):
+            print("\nYou turn the key and the chest clicks open.")
+            if location.items:
+                for item_name in list(location.items.keys()):
+                    item = location.remove_item(item_name)
+                    if item:
+                        player.add_item(item)
+                print("You gather the spoils from the ruins and find a very nice hat among the loot.")
+                print("You win!")
+                sys.exit(0)
+            else:
+                print("The chest is empty. Someone beat you to it.")
+                sys.exit(0)
+        else:
+            chance = randint(1, 10)
+            if chance <= 4:
+                print("\nThe chest is locked tight and refuses to budge. There must be a key hidden deeper in the ruins.")
+                castle_sequence(player, location, world)
+            else:
+                print("\nYou manage to pry the chest open despite the lock.")
+                if location.items:
+                    for item_name in list(location.items.keys()):
+                        item = location.remove_item(item_name)
+                        if item:
+                            player.add_item(item)
+                    print("You gather the spoils from the ruins and find a very nice hat among the loot.")
+                    print("You win!")
+                    sys.exit(0)
+                else:
+                    print("The chest is empty. Someone beat you to it.")
+                    sys.exit(0)
+    elif 'explore' in choice or 'deeper' in choice:
+        key = location.remove_item("rusty key")
+        if key:
+            player.add_item(key)
+            print("\nYou search the ruined corridors and find a rusty key tucked under a fallen stone.")
+            print("This looks like it could open the chest.")
+        else:
+            print("\nYou explore further, but the ruins offer no new secrets right now.")
+        castle_sequence(player, location, world)
     else:
-        print("The chest is empty. Someone beat you to it.")
-        sys.exit(0)
+        print("That's not a good choice here. Try 'open' or 'explore deeper'.")
+        castle_sequence(player, location, world)
 
 
-# -------------------------
-# Main game loop
-# -------------------------
+#main game loop
 
 def play_game():
     clear_terminal()
@@ -383,7 +422,7 @@ def play_game():
     world = build_world(player)
     current = world["crossroads"]
 
-    # Show crossroads description
+    #show crossroads description
     current.describe()
     while True:
         choice = prompt_choice("\nWhich way do you go? (left / right / straight / inventory / quit) ")
@@ -399,6 +438,8 @@ def play_game():
         elif 'quit' in choice or 'exit' in choice:
             print("You leave the forest for now. Adventure awaits another day.")
             sys.exit(0)
+        elif 'back' in choice:
+            print("You're already at the crossroads. There's no going back from here.")
         else:
             print("Left, right, or straight. You can also type 'inventory' or 'quit'.")
 
