@@ -1,5 +1,5 @@
 import os
-from random import randint, random
+from random import randint
 import sys
 from typing import List, Dict, Optional
 
@@ -144,7 +144,7 @@ def build_world(player: Player) -> Dict[str, Location]:
     bear = Entity("Bear", "A large bear blocking the path, looking mildly annoyed.", hostile=False)
 
     #bear interaction 
-    def bear_interact(self_entity: Entity, player_entity: Player, action: str) -> None:
+    def bear_interact(self_entity: Entity, player_entity: Player, action: str) -> str:
         action = action.lower()
         if "run" in action:
             print("\nYou bolt. Impressive hustle. You escape the bear but drop your map in a panic.")
@@ -157,29 +157,31 @@ def build_world(player: Player) -> Dict[str, Location]:
         elif "approach" in action or "calm" in action or "talk" in action:
             print("\nYou walk up slowly, hands out, speaking in a calm voice like a reasonable person.")
             print("The bear sniffs you, decides you're fine, and wanders off to reveal a hidden trail.")
-            #reveal hidden trail to cabin (already connected via river follow)
             meadow.connect("hidden trail", cabin)
             print("A hidden trail is revealed to the east.")
-        elif "fight" in action or "battle" in action:
-            number = random.randint(1,10) 
-            if number <= (7):
-                print("\nYou fight the bear. Daring.")
+            return "trail"
+        elif "fight" in action or "battle" in action or "attack" in action:
+            number = randint(1, 10)
+            print("\nYou fight the bear. Daring.")
+            if number <= 7:
                 print("Perhaps not the greatest idea, however.")
                 print("The bear mauls you. What did you really expect?")
                 print("Game over. You lose.")
-            elif number == (8):
-                print("\nYou fight the bear. But it's... impressed?")
-                print("You're still not stronger than the bear. But it shows you mercy.")
-                print("It decides you're fine, and wanders off to reveal a hidden trail.")
+                sys.exit(0)
+            elif number == 8:
+                print("It's impressed by your effort and lets you live.")
+                print("It wanders off to reveal a hidden trail.")
                 meadow.connect("hidden trail", cabin)
                 print("A hidden trail is revealed to the east.")
+                return "trail"
             else:
-                print("\nYou fight the bear. Daring.")
                 print("Not the wisest choice, yet by some stroke of luck, you win.")
                 meadow.connect("hidden trail", cabin)
                 print("A hidden trail is revealed to the east.")
+                return "trail"
         else:
-            print("The bear is waiting. Try 'run' or 'approach'.")
+            print("The bear is waiting. Try 'run', 'fight', or 'approach'.")
+            return "wait"
 
     # Bind the custom interact method
     bear.interact = lambda player, action: bear_interact(bear, player, action)
@@ -271,7 +273,7 @@ def cave_sequence(player: Player, location: Location, world: Dict[str, Location]
 
 def meadow_sequence(player: Player, location: Location, world: Dict[str, Location]) -> None:
     location.describe()
-    choice = prompt_choice("Do you 'run' or 'approach' the bear carefully? ")
+    choice = prompt_choice("Do you 'run', 'fight', or 'approach' the bear carefully? ")
 
     bear = location.entities.get("bear")
     if not bear:
@@ -280,30 +282,48 @@ def meadow_sequence(player: Player, location: Location, world: Dict[str, Locatio
 
     if 'run' in choice:
         bear.interact(player, "run")
-    elif 'fight' in choice or 'battle' in choice:
-        bear.interact(player, "fight")
+    elif 'fight' in choice or 'battle' in choice or 'attack' in choice:
+        result = bear.interact(player, "fight")
+        if result == "trail":
+            hidden_trail_sequence(player, world)
     elif 'approach' in choice or 'calm' in choice:
-        bear.interact(player, "approach")
-        # After successful approach, allow player to follow hidden trail
-        follow = prompt_choice("Do you follow the hidden trail? (yes/no) ")
-        if 'yes' in follow or 'y' in follow:
-            cabin = world.get("cabin")
-            if cabin:
-                cabin.describe()
-                # Give treasure if present
-                if cabin.items:
-                    for item_name in list(cabin.items.keys()):
-                        item = cabin.remove_item(item_name)
-                        if item:
-                            player.add_item(item)
-                    print("Inside: the treasure, plus a warm fireplace. You earned this.")
-                    print("You win!")
-                    sys.exit(0)
+        result = bear.interact(player, "approach")
+        if result == "trail":
+            hidden_trail_sequence(player, world)
+    elif 'follow' in choice or 'hidden' in choice or 'trail' in choice:
+        if "hidden trail" in location.exits:
+            hidden_trail_sequence(player, world)
         else:
-            print("You decide not to follow the trail right now.")
+            print("No trail is visible yet. The bear still blocks the path.")
+            meadow_sequence(player, location, world)
     else:
-        print("The bear is waiting. Try 'run' or 'approach'.")
+        print("The bear is waiting. Try 'run', 'fight', or 'approach'.")
         meadow_sequence(player, location, world)
+
+
+def hidden_trail_sequence(player: Player, world: Dict[str, Location]) -> None:
+    cabin = world.get("cabin")
+    if not cabin:
+        print("The hidden trail disappears into the forest and leads nowhere.")
+        return
+
+    follow = prompt_choice("Do you follow the hidden trail? (yes/no) ")
+    if 'yes' in follow or 'y' in follow:
+        print("\nYou follow the hidden trail.")
+        print("A cozy cabin appears, warm and welcoming.")
+        cabin.describe()
+        if cabin.items:
+            for item_name in list(cabin.items.keys()):
+                item = cabin.remove_item(item_name)
+                if item:
+                    player.add_item(item)
+            print("Inside: the treasure, plus a warm fireplace. You earned this.")
+            print("You win!")
+            sys.exit(0)
+        else:
+            print("The cabin is empty. You find nothing more here.")
+    else:
+        print("You decide not to follow the trail right now.")
 
 
 def river_sequence(player: Player, location: Location, world: Dict[str, Location]) -> None:

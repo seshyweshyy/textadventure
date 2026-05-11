@@ -1,5 +1,6 @@
 import os
 import sys
+from random import randint
 
 # messages to be used in the game, stored in a list for better organisation and easier maintenance
 messages = [
@@ -79,14 +80,27 @@ def cave_path():
 def meadow_path():
     pmessages(17, 19)
     print()
-    choice = input("Do you 'run' or 'approach' the bear carefully? ").strip().lower()
+    choice = input("Do you 'run', 'fight', or 'approach' the bear carefully? ").strip().lower()
 
     if 'run' in choice:
         pmessages(19, 22)
+    elif 'fight' in choice or 'battle' in choice:
+        result = randint(1, 10)
+        if result <= 7:
+            print("\nYou throw yourself at the bear. The bear throws you back.")
+            print("You lose. Maybe next time don't pick a fight with a bear.")
+        elif result == 8:
+            print("\nThe bear decides you're not worth the trouble.")
+            print("It wanders off and reveals a hidden trail.")
+            print("The trail leads straight to the treasure. You win!")
+        else:
+            print("\nAgainst all odds, your fight intimidates the bear.")
+            print("A hidden trail appears, leading to treasure.")
+            print("You win!")
     elif 'approach' in choice:
         pmessages(22, 26)
     else:
-        print("The bear is waiting. Try 'run' or 'approach'.")
+        print("The bear is waiting. Try 'run', 'fight', or 'approach'.")
         meadow_path()
 
 def castle_path():
