@@ -108,7 +108,7 @@ def river_path():
 
 def play_game():
     pmessages(4, 8)
-    choice = input("Which way do you go? (left / right / straight) ").strip().lower()
+    choice = input("Which way do you go? ").strip().lower()
 
     if 'left' in choice:
         cave_path()
