@@ -1,10 +1,9 @@
 import os
+from random import randint, random
 import sys
 from typing import List, Dict, Optional
 
-# -------------------------
-# Classes: Item, Entity, Location
-# -------------------------
+#classes
 
 class Item:
     """Represents an item the player can carry or find."""
@@ -91,12 +90,10 @@ class Location:
         self.exits[direction.lower()] = other
 
 
-# -------------------------
-# World setup
-# -------------------------
+#world setup
 
 def build_world(player: Player) -> Dict[str, Location]:
-    # Locations
+    #locations
     crossroads = Location(
         "Crossroads",
         "You stand at a crossroads deep in the forest. Paths lead left, right, and straight ahead."
@@ -122,7 +119,7 @@ def build_world(player: Player) -> Dict[str, Location]:
         "Mossy stones and broken towers. A place that hints at old secrets."
     )
 
-    # Connect locations
+    #connect locations
     crossroads.connect("left", cave)
     crossroads.connect("right", meadow)
     crossroads.connect("straight", river_bank)
@@ -130,23 +127,23 @@ def build_world(player: Player) -> Dict[str, Location]:
     river_bank.connect("cross", None)  # crossing is a risky action handled in logic
     cave.connect("deeper", castle)  # deeper cave leads to castle ruins in this version
 
-    # Items
+    #items
     treasure = Item("Treasure Chest", "A glimmering chest filled with riches.", usable=False)
     prank_rocks = Item("Bag of Rocks", "A heavy bag full of ordinary rocks. Not treasure.", usable=False)
     map_item = Item("Map", "A crumpled map showing a route to treasure.", usable=True)
     hat = Item("Nice Hat", "A very nice hat. Stylish and useful for shade.", usable=False)
 
-    # Place items
+    #place items
     cave.add_item(prank_rocks)
     cave.add_item(map_item)
     castle.add_item(treasure)
     castle.add_item(hat)
-    cabin.add_item(treasure)  # alternate treasure location if player follows river
+    cabin.add_item(treasure)  #alternate treasure location if player follows river
 
-    # Entities
+    #entities
     bear = Entity("Bear", "A large bear blocking the path, looking mildly annoyed.", hostile=False)
 
-    # Override bear interaction with a closure-like method
+    #bear interaction 
     def bear_interact(self_entity: Entity, player_entity: Player, action: str) -> None:
         action = action.lower()
         if "run" in action:
@@ -160,9 +157,27 @@ def build_world(player: Player) -> Dict[str, Location]:
         elif "approach" in action or "calm" in action or "talk" in action:
             print("\nYou walk up slowly, hands out, speaking in a calm voice like a reasonable person.")
             print("The bear sniffs you, decides you're fine, and wanders off to reveal a hidden trail.")
-            # Reveal hidden trail to cabin (already connected via river follow)
+            #reveal hidden trail to cabin (already connected via river follow)
             meadow.connect("hidden trail", cabin)
             print("A hidden trail is revealed to the east.")
+        elif "fight" in action or "battle" in action:
+            number = random.randint(1,10) 
+            if number <= (7):
+                print("\nYou fight the bear. Daring.")
+                print("Perhaps not the greatest idea, however.")
+                print("The bear mauls you. What did you really expect?")
+                print("Game over. You lose.")
+            elif number == (8):
+                print("\nYou fight the bear. But it's... impressed?")
+                print("You're still not stronger than the bear. But it shows you mercy.")
+                print("It decides you're fine, and wanders off to reveal a hidden trail.")
+                meadow.connect("hidden trail", cabin)
+                print("A hidden trail is revealed to the east.")
+            else:
+                print("\nYou fight the bear. Daring.")
+                print("Not the wisest choice, yet by some stroke of luck, you win.")
+                meadow.connect("hidden trail", cabin)
+                print("A hidden trail is revealed to the east.")
         else:
             print("The bear is waiting. Try 'run' or 'approach'.")
 
@@ -265,6 +280,8 @@ def meadow_sequence(player: Player, location: Location, world: Dict[str, Locatio
 
     if 'run' in choice:
         bear.interact(player, "run")
+    elif 'fight' in choice or 'battle' in choice:
+        bear.interact(player, "fight")
     elif 'approach' in choice or 'calm' in choice:
         bear.interact(player, "approach")
         # After successful approach, allow player to follow hidden trail
