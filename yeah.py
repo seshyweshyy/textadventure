@@ -3,8 +3,10 @@ from random import randint
 import sys
 from typing import List, Dict, Optional
 
+#classes
+
 class Item:
-    """Represents an item the player can carry or find."""
+    #Represents an item the player can carry or find.
     def __init__(self, name: str, description: str, usable: bool = False):
         self.name = name
         self.description = description
@@ -15,7 +17,7 @@ class Item:
 
 
 class Entity:
-    """Represents a living or sentient thing in the world (player, animals, NPCs)."""
+    #Represents a living or sentient thing in the world (player, animals, NPCs).
     def __init__(self, name: str, description: str, hostile: bool = False):
         self.name = name
         self.description = description
@@ -23,12 +25,12 @@ class Entity:
         self.alive = True
 
     def interact(self, player: "Player", action: str) -> None:
-        """Default interaction; override in subclasses or instances."""
+        #Default interaction; override in subclasses or instances.
         print(f"{self.name} doesn't respond to that.")
 
 
 class Player(Entity):
-    """Player entity with inventory and simple methods."""
+    #Player entity with inventory and simple methods.
     def __init__(self, name: str = "Traveler"):
         super().__init__(name, "A determined treasure seeker.", hostile=False)
         self.inventory: Dict[str, Item] = {}
@@ -53,7 +55,7 @@ class Player(Entity):
 
 
 class Location:
-    """Represents a location with description, items, entities, and exits."""
+    #Represents a location with description, items, entities, and exits.
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
@@ -181,12 +183,12 @@ def build_world(player: Player) -> Dict[str, Location]:
             print("The bear is waiting. Try 'run', 'fight', or 'approach'.")
             return "wait"
 
-    # Bind the custom interact method
+    #custom interact method
     bear.interact = lambda player, action: bear_interact(bear, player, action)
 
     meadow.add_entity(bear)
 
-    # Return world map and starting location
+    # world dictionary
     world = {
         "crossroads": crossroads,
         "cave": cave,
@@ -198,6 +200,7 @@ def build_world(player: Player) -> Dict[str, Location]:
     return world
 
 
+#game flow
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -271,7 +274,7 @@ def meadow_sequence(player: Player, location: Location, world: Dict[str, Locatio
     choice = prompt_choice("Do you 'run', 'fight', or 'approach' the bear carefully? ")
 
     bear = location.entities.get("bear")
-    if not bear:
+    if not bear: 
         print("The meadow is empty now.")
         return
 
@@ -289,7 +292,7 @@ def meadow_sequence(player: Player, location: Location, world: Dict[str, Locatio
         if "hidden trail" in location.exits:
             hidden_trail_sequence(player, world)
         else:
-            print("No trail is visible yet. The bear still blocks the path.")
+            print("The bear still blocks the path.")
             meadow_sequence(player, location, world)
     else:
         print("The bear is waiting. Try 'run', 'fight', or 'approach'.")
@@ -369,6 +372,9 @@ def castle_sequence(player: Player, location: Location, world: Dict[str, Locatio
         sys.exit(0)
 
 
+# -------------------------
+# Main game loop
+# -------------------------
 
 def play_game():
     clear_terminal()
