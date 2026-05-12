@@ -435,7 +435,7 @@ def play_game():
     current.describe()
     while True:
         choice = prompt_choice("\nWhich way do you go? (left / right / straight / inventory / quit) ")
-
+         #processes the user input
         if 'left' in choice:
             cave_sequence(player, world["cave"], world)
         elif 'right' in choice:
