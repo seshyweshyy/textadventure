@@ -247,7 +247,7 @@ def cave_sequence(player: Player, location: Location, world: Dict[str, Location]
         deeper = location.exits.get("deeper")
         if deeper:
             num = randint(1, 10)
-            if num <= 3:
+            if num <= 6:
                 #starts the castle sequence if lucky
                 castle_sequence(player, deeper, world)
             else:
@@ -270,7 +270,8 @@ def cave_sequence(player: Player, location: Location, world: Dict[str, Location]
         #grab nearest item (bag of rocks or map)
         if location.items:
             #Prefer map if present
-            if 'map' in location.items:
+            number = randint(1, 10)
+            if number <= 5:  # 50% chance to get the map
                 #removes the map from the location
                 item = location.remove_item('map')
                 #adds the map to the player's inventory
