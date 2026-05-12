@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 #classes
 
 class Item:
-    #Represents an item the player can carry or find.
+    #represents an item the player can carry or find.
     def __init__(self, name: str, description: str, usable: bool = False):
         self.name = name
         self.description = description
@@ -17,7 +17,7 @@ class Item:
 
 
 class Entity:
-    #Represents a living or sentient thing in the world (player, animals, NPCs).
+    #Rrepresents a living or sentient thing in the world (player, animals, NPCs).
     def __init__(self, name: str, description: str, hostile: bool = False):
         self.name = name
         self.description = description
@@ -30,7 +30,7 @@ class Entity:
 
 
 class Player(Entity):
-    #Player entity with inventory and simple methods.
+    #player entity with inventory and simple methods.
     def __init__(self, name: str = "Traveler"):
         super().__init__(name, "A determined treasure seeker.", hostile=False)
         self.inventory: Dict[str, Item] = {}
@@ -55,8 +55,9 @@ class Player(Entity):
 
 
 class Location:
-    #Represents a location with description, items, entities, and exits.
+    #represents a location with description, items, entities, and exits.
     def __init__(self, name: str, description: str):
+        #initializes a location with name and description; sets up empty dictionaries for items, entities, and exits
         self.name = name
         self.description = description
         self.items: Dict[str, Item] = {}
@@ -64,29 +65,37 @@ class Location:
         self.exits: Dict[str, "Location"] = {}
 
     def add_item(self, item: Item) -> None:
+        #adds an item to the location, stored by its lowercase name as a key
         self.items[item.name.lower()] = item
 
     def remove_item(self, item_name: str) -> Optional[Item]:
+        #removes and returns an item from the location by name; returns None if not found
         return self.items.pop(item_name.lower(), None)
 
     def add_entity(self, entity: Entity) -> None:
+        #adds an entity (NPC, creature) to the location, stored by its lowercase name as a key
         self.entities[entity.name.lower()] = entity
 
     def describe(self) -> None:
+        #displays the location's name, description, items present, and entities present
         print(f"\n{self.name}")
         print(self.description)
         if self.items:
             print("You notice:")
+            # prints each item with its name and description
             for item in self.items.values():
                 print(f"- {item.name}: {item.description}")
         if self.entities:
+            # prints each entity with its name and description
             for ent in self.entities.values():
                 print(f"- {ent.name}: {ent.description}")
 
     def get_exit_names(self) -> List[str]:
+        #returns a list of all available exit directions from this location
         return list(self.exits.keys())
 
     def connect(self, direction: str, other: "Location") -> None:
+        #connects this location to another location in a given direction; stores it in the exits dictionary
         self.exits[direction.lower()] = other
 
 
@@ -124,8 +133,8 @@ def build_world(player: Player) -> Dict[str, Location]:
     crossroads.connect("right", meadow)
     crossroads.connect("straight", river_bank)
     river_bank.connect("follow", cabin)
-    river_bank.connect("cross", None)  # crossing is a risky action handled in logic
-    cave.connect("deeper", castle)  # deeper cave leads to castle ruins in this version
+    river_bank.connect("cross", None)  
+    cave.connect("deeper", castle)  
 
     #items
     treasure = Item("Treasure Chest", "A glimmering chest filled with riches.", usable=False)
