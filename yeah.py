@@ -247,7 +247,7 @@ def cave_sequence(player: Player, location: Location, world: Dict[str, Location]
         deeper = location.exits.get("deeper")
         if deeper:
             num = randint(1, 10)
-            if num <= 6:
+            if num <= 4:
                 #starts the castle sequence if lucky
                 castle_sequence(player, deeper, world)
             else:
