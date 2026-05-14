@@ -34,6 +34,9 @@ class Player(Entity):
     def __init__(self, name: str = "Traveler"):
         super().__init__(name, "A determined treasure seeker.", hostile=False)
         self.inventory: Dict[str, Item] = {}
+        self.health = 100
+        self.stamina = 100
+        self.magic_power = 0
 
     def add_item(self, item: Item) -> None:
         self.inventory[item.name.lower()] = item
@@ -52,6 +55,14 @@ class Player(Entity):
         print("Inventory:")
         for item in self.inventory.values():
             print(f"- {item.name}: {item.description}")
+
+    def show_status(self) -> None:
+        """Display player stats."""
+        print(f"\n=== {self.name}'s Status ===")
+        print(f"Health:      {self.health}/100")
+        print(f"Stamina:     {self.stamina}/100")
+        print(f"Magic Power: {self.magic_power}/50")
+        print(f"Items:       {len(self.inventory)}")
 
 
 class Location:
@@ -142,6 +153,8 @@ def build_world(player: Player) -> Dict[str, Location]:
     map_item = Item("Map", "A crumpled map showing a route to treasure.", usable=True)
     hat = Item("Nice Hat", "A very nice hat. Stylish and useful for shade.", usable=False)
     rusty_key = Item("Rusty Key", "An old key with a worn handle. It looks like it belongs to something locked.", usable=True)
+    magic_scroll = Item("Magic Scroll", "An ancient scroll that glows with mysterious power. Use it for hints or spells.", usable=True)
+    mystery_ring = Item("Mysterious Ring", "A ring that pulses with an eerie blue light. It feels warm in your hand.", usable=True)
 
     #place items
     cave.add_item(prank_rocks)
@@ -149,6 +162,8 @@ def build_world(player: Player) -> Dict[str, Location]:
     castle.add_item(treasure)
     castle.add_item(hat)
     castle.add_item(rusty_key)
+    castle.add_item(magic_scroll)
+    castle.add_item(mystery_ring)
     cabin.add_item(treasure)  #alternate treasure location if player follows river
 
     #entities
@@ -198,6 +213,32 @@ def build_world(player: Player) -> Dict[str, Location]:
     bear.interact = lambda player, action: bear_interact(bear, player, action)
 
     meadow.add_entity(bear)
+
+    # Mysterious Sage at crossroads
+    sage = Entity("Mysterious Sage", "An ancient sage shrouded in mist. They seem to know the secrets of the forest.", hostile=False)
+    
+    def sage_interact(self_entity: Entity, player_entity: Player, action: str) -> None:
+        riddles = [
+            ("I have a face and two hands, but no arms or legs. What am I?", "clock"),
+            ("The more you take, the more you leave behind. What am I?", "footsteps"),
+            ("What can run but never walks, has a mouth but never talks?", "river"),
+        ]
+        
+        if "riddle" in action or "ask" in action or "help" in action:
+            riddle, answer = riddles[randint(0, len(riddles) - 1)]
+            print(f"\nThe Sage poses a riddle: {riddle}")
+            guess = input("Your answer: ").strip().lower()
+            if guess == answer:
+                print("The Sage nods wisely. 'Correct! Your wisdom is rewarded.'")
+                player_entity.magic_power = min(50, player_entity.magic_power + 15)
+                print(f"✨ You gained 15 Magic Power! (Now: {player_entity.magic_power}/50)")
+            else:
+                print(f"The Sage shakes their head. 'The answer is: {answer}. Try again next time.'")
+        else:
+            print("The Sage says: 'Ask me for a RIDDLE if you seek wisdom, traveler.'")
+    
+    sage.interact = lambda player, action: sage_interact(sage, player, action)
+    crossroads.add_entity(sage)
 
     # world dictionary
     world = {
@@ -250,8 +291,10 @@ class Game:
         print("go <direction> - Move in a direction (north, south, east, west, left, right, etc.)")
         print("take <item>   - Pick up an item")
         print("inventory     - Show your inventory")
+        print("status        - Display your health, stamina, and magic power")
         print("use <item>    - Use an item")
         print("interact <target> - Interact with an entity")
+        print("search        - 🔍 Search for hidden secrets in the area")
         print("exits         - Show available exits")
         print("help          - Show this help message")
         print("quit          - Exit the game")
@@ -273,10 +316,14 @@ class Game:
             self.take_item(arg)
         elif command == "inventory":
             self.player.list_inventory()
+        elif command == "status":
+            self.player.show_status()
         elif command == "use":
             self.use_item(arg)
         elif command == "interact":
             self.interact(arg)
+        elif command == "search":
+            self.search_area()
         elif command == "exits":
             self.show_exits()
         elif command == "help":
@@ -354,6 +401,61 @@ class Game:
             print(f"Exits: {', '.join(exits)}")
         else:
             print("There are no exits from here.")
+
+    def search_area(self) -> None:
+        """Search the current location for hidden secrets and Easter eggs."""
+        location_name = self.current_location.name.lower()
+        
+        search_results = {
+            "crossroads": [
+                "You notice strange symbols carved into one of the trees.",
+                "You find a glowing footprint in the dirt that quickly fades.",
+                "The air shimmers mysteriously here. Magic is afoot.",
+                "You hear whispers on the wind, but can't make out the words.",
+            ],
+            "dark cave": [
+                "Your eyes adjust and you spot ancient paintings on the cave wall!",
+                "You find a small cave fish glowing faintly in a pool.",
+                "Stalactites above form the shape of a dragon.",
+                "You discover claw marks - this cave is home to many creatures.",
+            ],
+            "sunny meadow": [
+                "Wildflowers bloom in a perfect circle - a fairy ring!",
+                "You spot deer watching you from a distance, completely calm.",
+                "The grass here is unnaturally warm beneath your feet.",
+                "You find a four-leaf clover and pocket it for luck.",
+            ],
+            "overgrown path": [
+                "You discover a carved wooden sign, weathered with age.",
+                "The river seems to glow faintly under your gaze.",
+                "You spot a nest of silver eggs hidden in the roots.",
+                "Moss covers ancient stone markers along the path.",
+            ],
+            "cozy cabin": [
+                "A journal sits on the desk! It's filled with treasure maps.",
+                "You discover a secret compartment under the floorboards.",
+                "Portraits on the wall show previous adventurers who found the treasure.",
+                "The fireplace warms your soul. You feel at peace.",
+            ],
+            "old castle ruins": [
+                "You uncover a hidden chamber beneath the ruins!",
+                "Ancient murals depict a great wizard who once guarded the castle.",
+                "You find a glowing crystal - it pulses with energy!",
+                "Ghostly figures seem to dance between the broken stones.",
+            ]
+        }
+        
+        if location_name in search_results:
+            messages = search_results[location_name]
+            discovery = messages[randint(0, len(messages) - 1)]
+            print(f"\n🔍 {discovery}")
+            
+            # Random chance to gain magic power
+            if randint(1, 100) > 70:
+                self.player.magic_power = min(50, self.player.magic_power + 5)
+                print("✨ You feel a surge of magic energy! +5 Magic Power")
+        else:
+            print("\nYou search carefully but find nothing of interest here.")
 
     def check_win_condition(self) -> bool:
         """Check if player has won."""
