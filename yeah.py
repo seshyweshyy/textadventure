@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 #classes
 
 class Item:
-    #represents an item the player can carry or find.
+    #represents an item the player can carry or find
     def __init__(self, name: str, description: str, usable: bool = False):
         self.name = name
         self.description = description
@@ -17,7 +17,7 @@ class Item:
 
 
 class Entity:
-    #Rrepresents a living or sentient thing in the world (player, animals, NPCs).
+    #represents a living or sentient thing in the world (player, animals, NPCs)
     def __init__(self, name: str, description: str, hostile: bool = False):
         self.name = name
         self.description = description
@@ -169,7 +169,7 @@ def build_world(player: Player) -> Dict[str, Location]:
     #entities
     bear = Entity("Bear", "A large bear blocking the path, looking mildly annoyed.", hostile=False)
 
-    #bear interaction 
+        #bear interaction 
     def bear_interact(self_entity: Entity, player_entity: Player, action: str) -> str:
         action = action.lower()
         if "run" in action:
@@ -214,7 +214,7 @@ def build_world(player: Player) -> Dict[str, Location]:
 
     meadow.add_entity(bear)
 
-    # Mysterious Sage at crossroads
+        #mysterious sage at crossroads
     sage = Entity("Mysterious Sage", "An ancient sage shrouded in mist. They seem to know the secrets of the forest.", hostile=False)
     
     def sage_interact(self_entity: Entity, player_entity: Player, action: str) -> None:
@@ -276,7 +276,7 @@ def prompt_choice(prompt: str) -> str:
         sys.exit(0)
 
 class Game:
-    """Main game controller that manages game state and player interactions."""
+    #main game controller that manages game state and player interactions
     def __init__(self, player_name: str = "Traveler"):
         self.player = Player(player_name)
         self.world = build_world(self.player)
@@ -285,7 +285,7 @@ class Game:
         self.moves = 0
 
     def show_help(self) -> None:
-        """Display available commands."""
+        #isplay available commands
         print("\n--- Available Commands ---")
         print("look          - Examine the current location in detail")
         print("go <direction> - Move in a direction (north, south, east, west, left, right, etc.)")
@@ -300,7 +300,7 @@ class Game:
         print("quit          - Exit the game")
 
     def parse_command(self, user_input: str) -> None:
-        """Parse and execute player commands."""
+        #parse and execute player commands
         if not user_input:
             return
 
@@ -335,12 +335,12 @@ class Game:
             print(f"Unknown command: '{command}'. Type 'help' for available commands.")
 
     def move(self, direction: str) -> None:
-        """Move player in a direction."""
+        #move player in a direction
         if not direction:
             print("Move in which direction? (try: go left, go right, go straight, etc.)")
             return
 
-        # Check available exits
+        #check available exits
         available = self.current_location.exits
         if direction in available:
             next_location = available[direction]
@@ -355,7 +355,7 @@ class Game:
             print(f"Available exits: {', '.join(available.keys())}")
 
     def take_item(self, item_name: str) -> None:
-        """Player takes an item from the location."""
+        #player takes an item from the location
         if not item_name:
             print("Take what? (try: take treasure, take map, etc.)")
             return
@@ -367,7 +367,7 @@ class Game:
             print(f"There's no '{item_name}' here.")
 
     def use_item(self, item_name: str) -> None:
-        """Player uses an item."""
+        #player uses an item
         if not item_name:
             print("Use what? (try: use map, use key, etc.)")
             return
@@ -382,7 +382,7 @@ class Game:
             print(f"You don't have a '{item_name}'.")
 
     def interact(self, target_name: str) -> None:
-        """Player interacts with an entity."""
+        #player interacts with an entity
         if not target_name:
             print("Interact with what? (try: interact bear, interact npc, etc.)")
             return
@@ -395,7 +395,7 @@ class Game:
             print(f"There's no '{target_name}' here to interact with.")
 
     def show_exits(self) -> None:
-        """Display available exits."""
+        #display available exits
         exits = self.current_location.get_exit_names()
         if exits:
             print(f"Exits: {', '.join(exits)}")
@@ -403,7 +403,7 @@ class Game:
             print("There are no exits from here.")
 
     def search_area(self) -> None:
-        """Search the current location for hidden secrets and Easter eggs."""
+        #search the current location for hidden secrets and easter eggs
         location_name = self.current_location.name.lower()
         
         search_results = {
@@ -448,17 +448,17 @@ class Game:
         if location_name in search_results:
             messages = search_results[location_name]
             discovery = messages[randint(0, len(messages) - 1)]
-            print(f"\n🔍 {discovery}")
+            print(f"\n {discovery}")
             
-            # Random chance to gain magic power
+            #random chance to gain magic power
             if randint(1, 100) > 70:
                 self.player.magic_power = min(50, self.player.magic_power + 5)
-                print("✨ You feel a surge of magic energy! +5 Magic Power")
+                print("You feel a surge of magic energy! +5 Magic Power")
         else:
             print("\nYou search carefully but find nothing of interest here.")
 
     def check_win_condition(self) -> bool:
-        """Check if player has won."""
+        #check if player has won
         if self.player.has_item("treasure chest"):
             print("\n=== YOU WIN! ===")
             print(f"You found the treasure in {self.moves} moves!")
@@ -466,7 +466,7 @@ class Game:
         return False
 
     def run(self) -> None:
-        """Main game loop."""
+        #main game loop
         clear_terminal()
         show_intro()
         print(f"\nWelcome, {self.player.name}!\n")
@@ -488,7 +488,7 @@ class Game:
 
 
 def main():
-    """Entry point for the game."""
+    #entry point for the game.
     print("Welcome to the Text Adventure!")
     player_name = input("What is your name, traveler? ").strip() or "Traveler"
     game = Game(player_name)
