@@ -234,226 +234,164 @@ def prompt_choice(prompt: str) -> str:
         print("\nGoodbye.")
         sys.exit(0)
 
-def cave_sequence(player: Player, location: Location, world: Dict[str, Location]) -> None:
-    location.describe()
-    print("There's a locked chest right in front of you, and a narrow tunnel going deeper.")
-    choice = prompt_choice("Do you 'grab' what you can reach, or 'go deeper'? ")
+class Game:
+    """Main game controller that manages game state and player interactions."""
+    def __init__(self, player_name: str = "Traveler"):
+        self.player = Player(player_name)
+        self.world = build_world(self.player)
+        self.current_location = self.world["crossroads"]
+        self.is_running = True
+        self.moves = 0
 
-    if 'deeper' in choice or 'go' in choice:
-        # Move to castle (deeper)
-        deeper = location.exits.get("deeper")
-        if deeper:
-            num = randint(1, 10)
-            if num <= 3:
-                castle_sequence(player, deeper, world)
+    def show_help(self) -> None:
+        """Display available commands."""
+        print("\n--- Available Commands ---")
+        print("look          - Examine the current location in detail")
+        print("go <direction> - Move in a direction (north, south, east, west, left, right, etc.)")
+        print("take <item>   - Pick up an item")
+        print("inventory     - Show your inventory")
+        print("use <item>    - Use an item")
+        print("interact <target> - Interact with an entity")
+        print("exits         - Show available exits")
+        print("help          - Show this help message")
+        print("quit          - Exit the game")
+
+    def parse_command(self, user_input: str) -> None:
+        """Parse and execute player commands."""
+        if not user_input:
+            return
+
+        parts = user_input.split(maxsplit=1)
+        command = parts[0].lower()
+        arg = parts[1].lower() if len(parts) > 1 else ""
+
+        if command == "look":
+            self.current_location.describe()
+        elif command == "go":
+            self.move(arg)
+        elif command == "take":
+            self.take_item(arg)
+        elif command == "inventory":
+            self.player.list_inventory()
+        elif command == "use":
+            self.use_item(arg)
+        elif command == "interact":
+            self.interact(arg)
+        elif command == "exits":
+            self.show_exits()
+        elif command == "help":
+            self.show_help()
+        elif command == "quit":
+            print("You gave up. Goodbye.")
+            self.is_running = False
+        else:
+            print(f"Unknown command: '{command}'. Type 'help' for available commands.")
+
+    def move(self, direction: str) -> None:
+        """Move player in a direction."""
+        if not direction:
+            print("Move in which direction? (try: go left, go right, go straight, etc.)")
+            return
+
+        # Check available exits
+        available = self.current_location.exits
+        if direction in available:
+            next_location = available[direction]
+            if next_location is None:
+                print("You can't go that way.")
+                return
+            self.current_location = next_location
+            self.moves += 1
+            self.current_location.describe()
+        else:
+            print(f"You can't go {direction} from here.")
+            print(f"Available exits: {', '.join(available.keys())}")
+
+    def take_item(self, item_name: str) -> None:
+        """Player takes an item from the location."""
+        if not item_name:
+            print("Take what? (try: take treasure, take map, etc.)")
+            return
+
+        item = self.current_location.remove_item(item_name)
+        if item:
+            self.player.add_item(item)
+        else:
+            print(f"There's no '{item_name}' here.")
+
+    def use_item(self, item_name: str) -> None:
+        """Player uses an item."""
+        if not item_name:
+            print("Use what? (try: use map, use key, etc.)")
+            return
+
+        if self.player.has_item(item_name):
+            item = self.player.inventory[item_name]
+            if item.usable:
+                print(f"You used the {item.name}. {item.description}")
             else:
-                print("\nBold. You crawl deeper and find the mother lode — gold, jewels, a very nice hat.")
-                # Transfer items from deeper location to player (simulate hauling out)
-                if deeper.items:
-                    for item_name in list(deeper.items.keys()):
-                        item = deeper.remove_item(item_name)
-                        if item:
-                            player.add_item(item)
-                print("You haul it all out and live comfortably ever after. Nice work.")
-                print("You win!")
-                sys.exit(0)
+                print(f"The {item.name} isn't useful right now.")
         else:
-            print("The tunnel collapses. You're stuck. You lose.")
-            sys.exit(0)
-    elif 'grab' in choice:
-        # Grab nearest item (bag of rocks or map)
-        if location.items:
-            #Prefer map if present
-            if 'map' in location.items:
-                #removes the map from the location
-                item = location.remove_item('map')
-                player.add_item(item)
-                print("\nYou snatch the map in a hurry. Good call — this might help later.")
-            else:
-                # pick a random item (prank rocks)
-                item = location.remove_item(next(iter(location.items)))
-                player.add_item(item)
-                if item.name.lower() == "bag of rocks":
-                    print("\nLess impressive: it's a bag of rocks someone left as a prank. Classic.")
-                    print("You lose. The rocks were not worth it.")
-                    sys.exit(0)
+            print(f"You don't have a '{item_name}'.")
+
+    def interact(self, target_name: str) -> None:
+        """Player interacts with an entity."""
+        if not target_name:
+            print("Interact with what? (try: interact bear, interact npc, etc.)")
+            return
+
+        target = self.current_location.entities.get(target_name)
+        if target:
+            action = prompt_choice(f"How do you interact with the {target.name}? ")
+            target.interact(self.player, action)
         else:
-            print("There's nothing reachable to grab.")
-            cave_sequence(player, location, world)
-    else:
-        print("That's not really an option here. Try 'grab' or 'go deeper'.")
-        cave_sequence(player, location, world)
+            print(f"There's no '{target_name}' here to interact with.")
 
-
-def meadow_sequence(player: Player, location: Location, world: Dict[str, Location]) -> None:
-    location.describe()
-    choice = prompt_choice("Do you 'run', 'fight', or 'approach' the bear carefully? ")
-
-    bear = location.entities.get("bear")
-    if not bear: 
-        print("The meadow is empty now.")
-        return
-
-    if 'run' in choice:
-        bear.interact(player, "run")
-    elif 'fight' in choice or 'battle' in choice or 'attack' in choice:
-        result = bear.interact(player, "fight")
-        if result == "trail":
-            hidden_trail_sequence(player, world)
-    elif 'approach' in choice or 'calm' in choice:
-        result = bear.interact(player, "approach")
-        if result == "trail":
-            hidden_trail_sequence(player, world)
-    elif 'follow' in choice or 'hidden' in choice or 'trail' in choice:
-        if "hidden trail" in location.exits:
-            hidden_trail_sequence(player, world)
+    def show_exits(self) -> None:
+        """Display available exits."""
+        exits = self.current_location.get_exit_names()
+        if exits:
+            print(f"Exits: {', '.join(exits)}")
         else:
-            print("The bear still blocks the path.")
-            meadow_sequence(player, location, world)
-    else:
-        print("The bear is waiting. Try 'run', 'fight', or 'approach'.")
-        meadow_sequence(player, location, world)
+            print("There are no exits from here.")
+
+    def check_win_condition(self) -> bool:
+        """Check if player has won."""
+        if self.player.has_item("treasure chest"):
+            print("\n=== YOU WIN! ===")
+            print(f"You found the treasure in {self.moves} moves!")
+            return True
+        return False
+
+    def run(self) -> None:
+        """Main game loop."""
+        clear_terminal()
+        show_intro()
+        print(f"\nWelcome, {self.player.name}!\n")
+
+        self.current_location.describe()
+        self.show_exits()
+
+        while self.is_running:
+            try:
+                if self.check_win_condition():
+                    self.is_running = False
+                    break
+
+                user_input = prompt_choice("\n> ")
+                self.parse_command(user_input)
+            except KeyboardInterrupt:
+                print("\n\nGame interrupted.")
+                self.is_running = False
 
 
-def hidden_trail_sequence(player: Player, world: Dict[str, Location]) -> None:
-    cabin = world.get("cabin")
-    if not cabin:
-        print("The hidden trail disappears into the forest and leads nowhere.")
-        return
-
-    follow = prompt_choice("Do you follow the hidden trail? (yes/no) ")
-    if 'yes' in follow or 'y' in follow:
-        print("\nYou follow the hidden trail.")
-        print("A cozy cabin appears, warm and welcoming.")
-        cabin.describe()
-        if cabin.items:
-            for item_name in list(cabin.items.keys()):
-                item = cabin.remove_item(item_name)
-                if item:
-                    player.add_item(item)
-            print("Inside: the treasure, plus a warm fireplace. You earned this.")
-            print("You win!")
-            sys.exit(0)
-        else:
-            print("The cabin is empty. You find nothing more here.")
-    else:
-        print("You decide not to follow the trail right now.")
-
-
-def river_sequence(player: Player, location: Location, world: Dict[str, Location]) -> None:
-    location.describe()
-    print("You could wade across, or follow the bank upstream where you see a curl of smoke.")
-    choice = prompt_choice("Do you 'cross' the river or 'follow' it upstream? ")
-
-    if 'cross' in choice:
-        print("\nYou wade in confidently. The current, unbothered by your confidence, sweeps you away.")
-        print("You wash up downstream, treasureless and damp.")
-        print("You lose. Rivers don't negotiate.")
-        sys.exit(0)
-    elif 'follow' in choice or 'upstream' in choice:
-        # Move to cabin
-        cabin = world.get("cabin")
-        if cabin:
-            print("\nSmart call. You follow the bank and find a cozy cabin with a note on the door.")
-            cabin.describe()
-            if cabin.items:
-                for item_name in list(cabin.items.keys()):
-                    item = cabin.remove_item(item_name)
-                    if item:
-                        player.add_item(item)
-                print("Inside: the treasure, plus a warm fireplace. You earned this.")
-                print("You win!")
-                sys.exit(0)
-        else:
-            print("You follow the river but find nothing of interest.")
-            river_sequence(player, location, world)
-    else:
-        print("You need to pick a direction. Try 'cross' or 'follow'.")
-        river_sequence(player, location, world)
-
-
-def castle_sequence(player: Player, location: Location, world: Dict[str, Location]) -> None:
-    location.describe()
-    print("The castle ruins are quiet. A locked chest sits beneath a collapsed arch.")
-    print("You can try to open the chest, but it looks like it might be trapped.")
-    choice = prompt_choice("Do you want to try to open the chest or explore deeper into the ruins? ")
-    if 'open' in choice or 'chest' in choice:
-        if player.has_item("rusty key"):
-            print("\nYou turn the key and the chest clicks open.")
-            if location.items:
-                for item_name in list(location.items.keys()):
-                    item = location.remove_item(item_name)
-                    if item:
-                        player.add_item(item)
-                print("You gather the spoils from the ruins and find a very nice hat among the loot.")
-                print("You win!")
-                sys.exit(0)
-            else:
-                print("The chest is empty. Someone beat you to it.")
-                sys.exit(0)
-        else:
-            chance = randint(1, 10)
-            if chance <= 4:
-                print("\nThe chest is locked tight and refuses to budge. There must be a key hidden deeper in the ruins.")
-                castle_sequence(player, location, world)
-            else:
-                print("\nYou manage to pry the chest open despite the lock.")
-                if location.items:
-                    for item_name in list(location.items.keys()):
-                        item = location.remove_item(item_name)
-                        if item:
-                            player.add_item(item)
-                    print("You gather the spoils from the ruins and find a very nice hat among the loot.")
-                    print("You win!")
-                    sys.exit(0)
-                else:
-                    print("The chest is empty. Someone beat you to it.")
-                    sys.exit(0)
-    elif 'explore' in choice or 'deeper' in choice:
-        key = location.remove_item("rusty key")
-        if key:
-            player.add_item(key)
-            print("\nYou search the ruined corridors and find a rusty key tucked under a fallen stone.")
-            print("This looks like it could open the chest.")
-        else:
-            print("\nYou explore further, but the ruins offer no new secrets right now.")
-        castle_sequence(player, location, world)
-    else:
-        print("That's not a good choice here. Try 'open' or 'explore deeper'.")
-        castle_sequence(player, location, world)
-
-
-#main game loop
-
-def play_game():
-    clear_terminal()
-    show_intro()
-    player = Player()
-    world = build_world(player)
-    current = world["crossroads"]
-
-    #show crossroads description
-    current.describe()
-    while True:
-        choice = prompt_choice("\nWhich way do you go? (left / right / straight / inventory / quit) ")
-         #processes the user input
-        if 'left' in choice:
-            cave_sequence(player, world["cave"], world)
-        elif 'right' in choice:
-            meadow_sequence(player, world["meadow"], world)
-        elif 'straight' in choice or 'ahead' in choice or 'forward' in choice:
-            river_sequence(player, world["river_bank"], world)
-        elif 'inventory' in choice or 'inv' in choice:
-            player.list_inventory()
-        elif 'quit' in choice or 'exit' in choice:
-            print("You leave the forest for now. Adventure awaits another day.")
-            sys.exit(0)
-        elif 'back' in choice:
-            print("You're already at the crossroads. There's no going back from here.")
-        else:
-            print("Left, right, or straight. You can also type 'inventory' or 'quit'.")
+def main():
+    """Entry point for the game."""
+    print("Welcome to the Text Adventure!")
+    player_name = input("What is your name, traveler? ").strip() or "Traveler"
+    game = Game(player_name)
+    game.run()
 
 
 if __name__ == "__main__":
-    play_game()
-    #Starts the game.
+    main()
