@@ -25,7 +25,7 @@ class Entity:
         self.alive = True
 
     def interact(self, player: "Player", action: str) -> None:
-        #Default interaction; override in subclasses or instances.
+        #default interaction; override in subclasses or instances.
         print(f"{self.name} doesn't respond to that.")
 
 
