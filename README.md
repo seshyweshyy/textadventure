@@ -1,4 +1,4 @@
-# yeah.py
+# textadventure.
 
 A text-based adventure game set in a forest. You are a traveler. There is treasure. Find it.
 
@@ -12,10 +12,11 @@ A text-based adventure game set in a forest. You are a traveler. There is treasu
 ## Running the Game
 
 ```bash
-python yeah.py
+python textadventure.py
 ```
 
 You will be asked for your name. You can press Enter to remain "Traveler", which is fine.
+Shame your parents didn't name you anything, but I digress.
 
 ---
 
@@ -24,6 +25,8 @@ You will be asked for your name. You can press Enter to remain "Traveler", which
 Type things. The game will try to understand you.
 
 There are spoilers in this. Obviously.
+
+I would play the game first. Treat this as a guide or a walkthrough.
 
 You do not need to type exact commands. The parser accepts natural language variations:
 
