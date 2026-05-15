@@ -57,7 +57,7 @@ class Player(Entity):
             print(f"- {item.name}: {item.description}")
 
     def show_status(self) -> None:
-        """Display player stats."""
+        #display player stats
         print(f"\n=== {self.name}'s Status ===")
         print(f"Health:      {self.health}/100")
         print(f"Stamina:     {self.stamina}/100")
@@ -231,7 +231,7 @@ def build_world(player: Player) -> Dict[str, Location]:
             if guess == answer:
                 print("The Sage nods wisely. 'Correct! Your wisdom is rewarded.'")
                 player_entity.magic_power = min(50, player_entity.magic_power + 15)
-                print(f"✨ You gained 15 Magic Power! (Now: {player_entity.magic_power}/50)")
+                print(f"You gained 15 Magic Power! (Now: {player_entity.magic_power}/50)")
             else:
                 print(f"The Sage shakes their head. 'The answer is: {answer}. Try again next time.'")
         else:
@@ -331,13 +331,13 @@ class Game:
             "look":      {"look", "examine", "observe", "inspect", "check"},
             "take":      {"take", "grab", "pick", "collect", "get"},
             "inventory": {"inventory", "inv", "bag", "items", "backpack", "pockets"},
-            "status":    {"status", "stats", "health", "hp"},
-            "use":       {"use", "apply", "activate", "equip"},
-            "interact":  {"interact", "talk", "speak", "approach", "ask"},
+            "status":    {"status", "stats", "health", "hp", "stamina", "magic"},
+            "use":       {"use", "apply", "activate", "equip", "consume"},
+            "interact":  {"interact", "talk", "speak", "approach", "ask", "touch"},
             "search":    {"search", "explore", "investigate", "look around", "scan"},
             "exits":     {"exits", "directions", "ways", "paths", "where"},
             "help":      {"help", "commands", "?"},
-            "quit":      {"quit", "exit", "leave", "give up"},
+            "quit":      {"quit", "exit", "end", "give up"},
         }
 
         input_words = set(words)
@@ -380,7 +380,7 @@ class Game:
         elif matched_command == "help":
             self.show_help()
         elif matched_command == "quit":
-            print("You gave up. Goodbye.")
+            print("You gave up. The treasure remains to be found. Goodbye.")
             self.is_running = False
         else:
             print(f"Unknown command: '{user_input}'. Type 'help' for available commands.")
