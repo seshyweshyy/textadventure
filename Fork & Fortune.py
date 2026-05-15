@@ -285,54 +285,105 @@ class Game:
         self.moves = 0
 
     def show_help(self) -> None:
-        #isplay available commands
-        print("\n--- Available Commands ---")
-        print("look          - Examine the current location in detail")
-        print("go <direction> - Move in a direction (north, south, east, west, left, right, etc.)")
-        print("take <item>   - Pick up an item")
-        print("inventory     - Show your inventory")
-        print("status        - Display your health, stamina, and magic power")
-        print("use <item>    - Use an item")
-        print("interact <target> - Interact with an entity")
-        print("search        - 🔍 Search for hidden secrets in the area")
-        print("exits         - Show available exits")
-        print("help          - Show this help message")
-        print("quit          - Exit the game")
+        loc = self.current_location
+        hints = []
+
+        # Exits
+        exits = list(loc.exits.keys())
+        if exits:
+            hints.append(f"You can move: {', '.join(exits)}  →  try typing '{exits[0]}'")
+
+        # Items on the ground
+        if loc.items:
+            item_names = list(loc.items.keys())
+            hints.append(f"There's something here to pick up: try 'take {item_names[0]}'")
+
+        # Entities to interact with
+        if loc.entities:
+            entity_names = list(loc.entities.keys())
+            hints.append(f"There's someone here: try 'talk {entity_names[0]}'")
+
+        # Inventory items that are usable
+        usable = [name for name, item in self.player.inventory.items() if item.usable]
+        if usable:
+            hints.append(f"You're carrying something usable: try 'use {usable[0]}'")
+
+        # Always-available
+        hints.append("Type 'look' to examine your surroundings, 'exits' to see where you can go, 'search' to look for secrets.")
+        hints.append("Type 'inventory' or 'status' to check your items and stats.")
+
+        print(f"\n--- Hints for {loc.name} ---")
+        for hint in hints:
+            print(f"  * {hint}")
 
     def parse_command(self, user_input: str) -> None:
         #parse and execute player commands
         if not user_input:
             return
 
-        parts = user_input.split(maxsplit=1)
-        command = parts[0].lower()
-        arg = parts[1].lower() if len(parts) > 1 else ""
+        words = user_input.split()
+        # arg = everything after the first word
+        arg = " ".join(words[1:]).lower() if len(words) > 1 else ""
 
-        if command == "look":
+        # Each command maps to a set of trigger words.
+        # The parser checks whether any trigger word appears anywhere in the input.
+        COMMAND_KEYWORDS = {
+            "look":      {"look", "examine", "observe", "inspect", "check"},
+            "take":      {"take", "grab", "pick", "collect", "get"},
+            "inventory": {"inventory", "inv", "bag", "items", "backpack", "pockets"},
+            "status":    {"status", "stats", "health", "hp"},
+            "use":       {"use", "apply", "activate", "equip"},
+            "interact":  {"interact", "talk", "speak", "approach", "ask"},
+            "search":    {"search", "explore", "investigate", "look around", "scan"},
+            "exits":     {"exits", "directions", "ways", "paths", "where"},
+            "help":      {"help", "commands", "?"},
+            "quit":      {"quit", "exit", "leave", "give up"},
+        }
+
+        input_words = set(words)
+
+        # Check movement first: if any known exit direction appears in the input,
+        # and the input isn't clearly a take/use/interact command, treat it as movement.
+        known_directions = self.current_location.exits.keys()
+        matched_direction = next(
+            (d for d in known_directions if d in input_words),
+            None
+        )
+        if matched_direction and not (input_words & COMMAND_KEYWORDS["take"] or
+                                      input_words & COMMAND_KEYWORDS["use"]):
+            self.move(matched_direction)
+            return
+
+        # Match the first recognised command keyword found in the input.
+        matched_command = None
+        for cmd, keywords in COMMAND_KEYWORDS.items():
+            if input_words & keywords:
+                matched_command = cmd
+                break
+
+        if matched_command == "look":
             self.current_location.describe()
-        elif command == "go":
-            self.move(arg)
-        elif command == "take":
+        elif matched_command == "take":
             self.take_item(arg)
-        elif command == "inventory":
+        elif matched_command == "inventory":
             self.player.list_inventory()
-        elif command == "status":
+        elif matched_command == "status":
             self.player.show_status()
-        elif command == "use":
+        elif matched_command == "use":
             self.use_item(arg)
-        elif command == "interact":
+        elif matched_command == "interact":
             self.interact(arg)
-        elif command == "search":
+        elif matched_command == "search":
             self.search_area()
-        elif command == "exits":
+        elif matched_command == "exits":
             self.show_exits()
-        elif command == "help":
+        elif matched_command == "help":
             self.show_help()
-        elif command == "quit":
+        elif matched_command == "quit":
             print("You gave up. Goodbye.")
             self.is_running = False
         else:
-            print(f"Unknown command: '{command}'. Type 'help' for available commands.")
+            print(f"Unknown command: '{user_input}'. Type 'help' for available commands.")
 
     def move(self, direction: str) -> None:
         #move player in a direction
