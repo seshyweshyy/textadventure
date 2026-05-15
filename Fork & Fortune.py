@@ -25,12 +25,12 @@ class Entity:
         self.alive = True
 
     def interact(self, player: "Player", action: str) -> None:
-        #default interaction; override in subclasses or instances.
+        #default interaction override in subclasses or instances
         print(f"{self.name} doesn't respond to that.")
 
 
 class Player(Entity):
-    #player entity with inventory and simple methods.
+    #player entity with inventory and simple methods
     def __init__(self, name: str = "Traveler"):
         super().__init__(name, "A determined treasure seeker.", hostile=False)
         self.inventory: Dict[str, Item] = {}
@@ -66,9 +66,9 @@ class Player(Entity):
 
 
 class Location:
-    #represents a location with description, items, entities, and exits.
+    #represents a location with description, items, entities, and exits
     def __init__(self, name: str, description: str):
-        #initializes a location with name and description; sets up empty dictionaries for items, entities, and exits
+        #initializes a location with name and description and empty item/entity/exit collections
         self.name = name
         self.description = description
         self.items: Dict[str, Item] = {}
@@ -76,37 +76,37 @@ class Location:
         self.exits: Dict[str, "Location"] = {}
 
     def add_item(self, item: Item) -> None:
-        #adds an item to the location, stored by its lowercase name as a key
+        #adds an item to the location stored by its lowercase name
         self.items[item.name.lower()] = item
 
     def remove_item(self, item_name: str) -> Optional[Item]:
-        #removes and returns an item from the location by name; returns None if not found
+        #removes and returns an item from the location by name
         return self.items.pop(item_name.lower(), None)
 
     def add_entity(self, entity: Entity) -> None:
-        #adds an entity (NPC, creature) to the location, stored by its lowercase name as a key
+        #adds an entity to the location stored by its lowercase name
         self.entities[entity.name.lower()] = entity
 
     def describe(self) -> None:
-        #displays the location's name, description, items present, and entities present
+        #displays the location name description items and entities
         print(f"\n{self.name}")
         print(self.description)
         if self.items:
             print("You notice:")
-            # prints each item with its name and description
+            #prints each item with its name and description
             for item in self.items.values():
                 print(f"- {item.name}: {item.description}")
         if self.entities:
-            # prints each entity with its name and description
+            #prints each entity with its name and description
             for ent in self.entities.values():
                 print(f"- {ent.name}: {ent.description}")
 
     def get_exit_names(self) -> List[str]:
-        #returns a list of all available exit directions from this location
+        #returns a list of available exit directions for this location
         return list(self.exits.keys())
 
     def connect(self, direction: str, other: "Location") -> None:
-        #connects this location to another location in a given direction; stores it in the exits dictionary
+        #connects this location to another location in a given direction
         self.exits[direction.lower()] = other
 
 
@@ -169,7 +169,7 @@ def build_world(player: Player) -> Dict[str, Location]:
     #entities
     bear = Entity("Bear", "A large bear blocking the path, looking mildly annoyed.", hostile=False)
 
-        #bear interaction 
+    #bear interaction
     def bear_interact(self_entity: Entity, player_entity: Player, action: str) -> str:
         action = action.lower()
         if "run" in action:
@@ -240,7 +240,7 @@ def build_world(player: Player) -> Dict[str, Location]:
     sage.interact = lambda player, action: sage_interact(sage, player, action)
     crossroads.add_entity(sage)
 
-    # world dictionary
+    #world dictionary
     world = {
         "crossroads": crossroads,
         "cave": cave,
@@ -288,27 +288,27 @@ class Game:
         loc = self.current_location
         hints = []
 
-        # Exits
+        #exits
         exits = list(loc.exits.keys())
         if exits:
             hints.append(f"You can move: {', '.join(exits)}  →  try typing '{exits[0]}'")
 
-        # Items on the ground
+        #items on the ground
         if loc.items:
             item_names = list(loc.items.keys())
             hints.append(f"There's something here to pick up: try 'take {item_names[0]}'")
 
-        # Entities to interact with
+        #entities to interact with
         if loc.entities:
             entity_names = list(loc.entities.keys())
             hints.append(f"There's someone here: try 'talk {entity_names[0]}'")
 
-        # Inventory items that are usable
+        #inventory items that are usable
         usable = [name for name, item in self.player.inventory.items() if item.usable]
         if usable:
             hints.append(f"You're carrying something usable: try 'use {usable[0]}'")
 
-        # Always-available
+        #always available
         hints.append("Type 'look' to examine your surroundings, 'exits' to see where you can go, 'search' to look for secrets.")
         hints.append("Type 'inventory' or 'status' to check your items and stats.")
 
@@ -322,11 +322,11 @@ class Game:
             return
 
         words = user_input.split()
-        # arg = everything after the first word
+        #arg = everything after the first word
         arg = " ".join(words[1:]).lower() if len(words) > 1 else ""
 
-        # Each command maps to a set of trigger words.
-        # The parser checks whether any trigger word appears anywhere in the input.
+        #each command maps to a set of trigger words
+        #the parser checks whether any trigger word appears anywhere in the input
         COMMAND_KEYWORDS = {
             "look":      {"look", "examine", "observe", "inspect", "check"},
             "take":      {"take", "grab", "pick", "collect", "get"},
@@ -342,8 +342,8 @@ class Game:
 
         input_words = set(words)
 
-        # Check movement first: if any known exit direction appears in the input,
-        # and the input isn't clearly a take/use/interact command, treat it as movement.
+        #check movement first if any known exit direction appears in the input
+        #and the input isn't clearly a take/use/interact command treat it as movement
         known_directions = self.current_location.exits.keys()
         matched_direction = next(
             (d for d in known_directions if d in input_words),
@@ -354,7 +354,7 @@ class Game:
             self.move(matched_direction)
             return
 
-        # Match the first recognised command keyword found in the input.
+        #match the first recognised command keyword found in the input
         matched_command = None
         for cmd, keywords in COMMAND_KEYWORDS.items():
             if input_words & keywords:
@@ -539,7 +539,7 @@ class Game:
 
 
 def main():
-    #entry point for the game.
+    #entry point for the game
     print("Welcome to the Text Adventure!")
     player_name = input("What is your name, traveler? ").strip() or "Traveler"
     game = Game(player_name)
